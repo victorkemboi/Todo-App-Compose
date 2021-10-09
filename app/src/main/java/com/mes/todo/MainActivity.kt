@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.*
@@ -26,6 +27,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -40,6 +42,8 @@ import androidx.paging.compose.items
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.mes.todo.data.entities.Todo
+import com.mes.todo.ui.theme.LightBlue
+import com.mes.todo.ui.theme.LightGreen
 import com.mes.todo.ui.theme.ToDoTheme
 import com.mes.todo.utils.TodoStateConstants.DONE
 import com.mes.todo.utils.TodoStateConstants.PENDING
@@ -86,7 +90,6 @@ class MainActivity : ComponentActivity() {
                         val selectedLanguage = radioGroup(
                             radioOptions = languageOptions,
                             title = "State:",
-                            cardBackgroundColor = Color(0xFFFFFAF0),
                         )
                         TodoItems(
                             todoItems = when (selectedLanguage) {
@@ -174,9 +177,9 @@ fun TodoItems(
                         onDeleteTodo = onDeleteTodo,
                         coroutineScope = coroutineScope,
                         iconTint = if (item.isDone) {
-                            Color.Green
+                            LightGreen
                         } else {
-                            Color.Blue
+                            LightBlue
                         }
                     )
                 }
@@ -193,7 +196,7 @@ fun TodoItem(
     onDeleteTodo: suspend (todo: Todo) -> Unit,
     coroutineScope: CoroutineScope,
     modifier: Modifier = Modifier,
-    iconTint: Color = Color.Green,
+    iconTint: Color = LightBlue,
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -210,6 +213,17 @@ fun TodoItem(
             val context = LocalContext.current
             Image(
                 modifier = Modifier
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                iconTint,
+                                Color.DarkGray
+                            )
+                        ),
+                        CircleShape
+                    )
+                    .height(48.dp)
+                    .width(48.dp)
                     .clickable {
                         if (!todo.isDone) {
                             coroutineScope.safeLaunch {
@@ -226,17 +240,6 @@ fun TodoItem(
                             }
                         }
                     }
-                    .height(48.dp)
-                    .width(48.dp)
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                iconTint,
-                                Color.DarkGray
-                            )
-                        ),
-                        RoundedCornerShape(12.dp)
-                    )
                     .padding(12.dp)
                     .constrainAs(icon) {
                         start.linkTo(parent.start)
@@ -300,7 +303,6 @@ fun TodoItem(
 fun radioGroup(
     radioOptions: List<String> = listOf(),
     title: String = "",
-    cardBackgroundColor: Color = Color(0xFFFEFEFA),
     modifier: Modifier = Modifier
 ): String {
     if (radioOptions.isNotEmpty()) {
@@ -309,7 +311,6 @@ fun radioGroup(
         }
 
         Card(
-            backgroundColor = cardBackgroundColor,
             modifier = modifier
                 .padding(10.dp)
                 .fillMaxWidth(),
@@ -317,9 +318,28 @@ fun radioGroup(
             shape = RoundedCornerShape(12.dp),
         ) {
             Column(
-                Modifier.padding(10.dp)
+                Modifier
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(
+                                Color.DarkGray,
+                                when (selectedOption) {
+                                    PENDING -> LightBlue
+                                    DONE -> LightGreen
+                                    else -> Color(0xFFFEFEFA)
+                                }
+                            )
+                        ),
+                        RoundedCornerShape(12.dp)
+                    )
+                    .padding(10.dp)
             ) {
                 Text(
+                    color = when (selectedOption) {
+                        PENDING -> LightBlue
+                        DONE -> LightGreen
+                        else -> Color(0xFFFEFEFA)
+                    },
                     text = title,
                     fontStyle = FontStyle.Normal,
                     fontWeight = FontWeight.Bold,
@@ -337,7 +357,13 @@ fun radioGroup(
                         ) {
                             RadioButton(
                                 selected = (item == selectedOption),
-                                onClick = { onOptionSelected(item) }
+                                onClick = { onOptionSelected(item) },
+                                colors = RadioButtonDefaults.colors(
+                                    selectedColor = when (selectedOption) {
+                                        PENDING -> LightBlue
+                                        else -> LightGreen
+                                    }
+                                )
                             )
 
                             val annotatedString = buildAnnotatedString {
@@ -347,6 +373,9 @@ fun radioGroup(
                             }
 
                             ClickableText(
+                                style = TextStyle(
+                                    color = Color.White,
+                                ),
                                 text = annotatedString,
                                 onClick = {
                                     onOptionSelected(item)
