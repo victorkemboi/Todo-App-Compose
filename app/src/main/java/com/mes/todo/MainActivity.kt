@@ -90,16 +90,20 @@ class MainActivity : ComponentActivity() {
                                 todoViewModel.addToDoItem()
                             }
                         },
+                        shape = RoundedCornerShape(12.dp),
+                        backgroundColor = Color.Blue,
                         modifier = Modifier
                             .constrainAs(addFab) {
                                 bottom.linkTo(parent.bottom)
                                 end.linkTo(parent.end)
                             }
-                            .offset(x = (-16).dp, y = (-16).dp)
+                            .offset(x = (-26).dp, y = (-16).dp)
+
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_add),
-                            contentDescription = "Add icon"
+                            contentDescription = "Add icon",
+                            tint = Color.Green
                         )
                     }
                 }
@@ -178,9 +182,24 @@ fun TodoItem(
             val coroutineScope = rememberCoroutineScope()
             Image(
                 modifier = Modifier
+                    .clickable {
+                        if (!todo.isDone) {
+                            coroutineScope.launch {
+                                Toast
+                                    .makeText(
+                                        context,
+                                        "Done for: ${todo.title}",
+                                        Toast.LENGTH_SHORT
+                                    )
+                                    .show()
+                                onMarkToDoDone(todo.apply {
+                                    isDone = true
+                                })
+                            }
+                        }
+                    }
                     .height(48.dp)
                     .width(48.dp)
-
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(
@@ -195,20 +214,6 @@ fun TodoItem(
                         start.linkTo(parent.start)
                         top.linkTo(parent.top)
                         bottom.linkTo(parent.bottom)
-                    }
-                    .clickable {
-                        coroutineScope.launch {
-                            Toast
-                                .makeText(
-                                    context,
-                                    "Done for: ${todo.title}",
-                                    Toast.LENGTH_SHORT
-                                )
-                                .show()
-                            onMarkToDoDone(todo.apply {
-                                isDone = true
-                            })
-                        }
                     },
                 painter = painter,
                 contentDescription = todo.title,
