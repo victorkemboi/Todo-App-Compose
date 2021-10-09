@@ -121,9 +121,9 @@ fun TodoItems(
             lazyItems.loadState.append == LoadState.Loading
         ),
         onRefresh = { lazyItems.refresh() },
+        modifier = modifier
     ) {
         LazyColumn(
-            modifier = modifier
         ) {
             items(lazyItems) { item ->
                 item ?: return@items
