@@ -10,9 +10,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -21,10 +25,14 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.lifecycle.lifecycleScope
 import androidx.paging.LoadState
 import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -33,12 +41,13 @@ import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.mes.todo.data.entities.Todo
 import com.mes.todo.ui.theme.ToDoTheme
+import com.mes.todo.utils.TodoStateConstants.DONE
+import com.mes.todo.utils.TodoStateConstants.PENDING
 import com.mes.todo.utils.format
 import com.mes.todo.utils.safeLaunch
 import com.mes.todo.viewmodels.TodoViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import timber.log.Timber
 
@@ -58,36 +67,45 @@ class MainActivity : ComponentActivity() {
                         )
                 ) {
                     val coroutineScope = rememberCoroutineScope()
-                    val (addFab, taskTitle, todos) = createRefs()
-                    Text(
-                        text = "Tasks",
-                        fontSize = 24.sp,
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .constrainAs(taskTitle) {
-                                top.linkTo(parent.top)
-                                start.linkTo(parent.start)
-                            }
-                    )
-
-                    TodoItems(
-                        todoItems = todoViewModel.fetchTodos(),
-                        onMarkToDoDone = todoViewModel::updateTodo,
-                        onDeleteTodo = todoViewModel::deleteTodo,
-                        coroutineScope = coroutineScope,
+                    val (addFab, content) = createRefs()
+                    Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .constrainAs(todos) {
-                                top.linkTo(taskTitle.bottom)
-                                bottom.linkTo(parent.bottom)
-                            }
-                            .padding(
-                                top = 18.dp,
-                                bottom = 18.dp,
-                                start = 8.dp,
-                                end = 8.dp,
-                            )
-                    )
+                            .padding(top = 16.dp, bottom = 16.dp)
+                    ) {
+
+                        Text(
+                            text = "Tasks",
+                            fontSize = 24.sp,
+                            modifier = Modifier
+                                .padding(16.dp)
+                        )
+
+                        val languageOptions: List<String> = listOf(PENDING, DONE)
+
+                        val selectedLanguage = radioGroup(
+                            radioOptions = languageOptions,
+                            title = "State:",
+                            cardBackgroundColor = Color(0xFFFFFAF0),
+                        )
+                        TodoItems(
+                            todoItems = when (selectedLanguage) {
+                                PENDING -> todoViewModel.fetchPendingTodos()
+                                else -> todoViewModel.fetchDoneTodos()
+                            },
+                            onMarkToDoDone = todoViewModel::updateTodo,
+                            onDeleteTodo = todoViewModel::deleteTodo,
+                            coroutineScope = coroutineScope,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(
+                                    top = 18.dp,
+                                    bottom = 18.dp,
+                                    start = 8.dp,
+                                    end = 8.dp,
+                                )
+                        )
+                    }
 
                     FloatingActionButton(
                         onClick = {
@@ -274,5 +292,73 @@ fun TodoItem(
             )
 
         }
+    }
+}
+
+
+@Composable
+fun radioGroup(
+    radioOptions: List<String> = listOf(),
+    title: String = "",
+    cardBackgroundColor: Color = Color(0xFFFEFEFA),
+    modifier: Modifier = Modifier
+): String {
+    if (radioOptions.isNotEmpty()) {
+        val (selectedOption, onOptionSelected) = remember {
+            mutableStateOf(radioOptions[0])
+        }
+
+        Card(
+            backgroundColor = cardBackgroundColor,
+            modifier = modifier
+                .padding(10.dp)
+                .fillMaxWidth(),
+            elevation = 8.dp,
+            shape = RoundedCornerShape(12.dp),
+        ) {
+            Column(
+                Modifier.padding(10.dp)
+            ) {
+                Text(
+                    text = title,
+                    fontStyle = FontStyle.Normal,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(5.dp),
+                )
+
+                Row(
+                    Modifier.padding(5.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    radioOptions.forEach { item ->
+                        Row(
+                            Modifier.padding(5.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = (item == selectedOption),
+                                onClick = { onOptionSelected(item) }
+                            )
+
+                            val annotatedString = buildAnnotatedString {
+                                withStyle(
+                                    style = SpanStyle(fontWeight = FontWeight.Bold)
+                                ) { append("  $item  ") }
+                            }
+
+                            ClickableText(
+                                text = annotatedString,
+                                onClick = {
+                                    onOptionSelected(item)
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        return selectedOption
+    } else {
+        return ""
     }
 }

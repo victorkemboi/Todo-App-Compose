@@ -9,7 +9,8 @@ class TodoUseCase(
 ) {
     suspend fun saveTodo(item: Todo) = todoRepository.save(item)
 
-    fun fetchTodos() = todoRepository.fetchAll()
+    fun fetchDoneTodos() = todoRepository.fetchDoneTodos()
+    fun fetchPendingTodos() = todoRepository.fetchPendingTodos()
 
     suspend fun updateTodo(todo: Todo) = todoRepository.update(todo)
 

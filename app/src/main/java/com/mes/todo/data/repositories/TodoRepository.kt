@@ -9,7 +9,8 @@ import com.mes.todo.data.entities.Todo
 import kotlinx.coroutines.flow.Flow
 
 interface TodoRepository : BaseRepository<Todo> {
-    fun fetchAll(): Flow<PagingData<Todo>>
+    fun fetchDoneTodos(): Flow<PagingData<Todo>>
+    fun fetchPendingTodos(): Flow<PagingData<Todo>>
     suspend fun clearTodos()
 }
 
@@ -18,7 +19,7 @@ class TodoRepositoryImpl(
 ) : TodoRepository {
 
     @ExperimentalPagingApi
-    override fun fetchAll(): Flow<PagingData<Todo>> =
+    override fun fetchDoneTodos(): Flow<PagingData<Todo>> =
         Pager(
             config = PagingConfig(
                 pageSize = 50,
@@ -27,7 +28,21 @@ class TodoRepositoryImpl(
             ),
             remoteMediator = null,
             pagingSourceFactory = {
-                todoDao.fetchAll()
+                todoDao.fetchDoneTodos()
+            }
+        ).flow
+
+    @ExperimentalPagingApi
+    override fun fetchPendingTodos(): Flow<PagingData<Todo>> =
+        Pager(
+            config = PagingConfig(
+                pageSize = 50,
+                enablePlaceholders = false,
+                prefetchDistance = 2
+            ),
+            remoteMediator = null,
+            pagingSourceFactory = {
+                todoDao.fetchPendingTodos()
             }
         ).flow
 

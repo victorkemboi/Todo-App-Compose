@@ -11,7 +11,8 @@ class TodoViewModel(
 ) : ViewModel() {
     private suspend fun saveTodo(item: Todo) = todoUseCase.saveTodo(item)
 
-    fun fetchTodos() = todoUseCase.fetchTodos()
+    fun fetchDoneTodos() = todoUseCase.fetchDoneTodos()
+    fun fetchPendingTodos() = todoUseCase.fetchPendingTodos()
 
     suspend fun addToDoItem() {
         saveTodo(
