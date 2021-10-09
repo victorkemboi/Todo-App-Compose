@@ -13,19 +13,19 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.collections.HashMap
-
-@androidx.room.Database(
-    entities = [
-        Todo::class,
-    ],
-    version = 1,
-    exportSchema = false
-)
-
-@TypeConverters(
-    DateConverter::class,
-)
-abstract class Database : RoomDatabase() {
-    abstract fun TodoDao(): TodoDao
-}
+annotation class DataBase
+//@androidx.room.Database(
+//    entities = [
+//        Todo::class,
+//    ],
+//    version = 1,
+//    exportSchema = false
+//)
+//
+//@TypeConverters(
+//    DateConverter::class,
+//)
+//abstract class Database : RoomDatabase() {
+//    abstract fun TodoDao(): TodoDao
+//}
 

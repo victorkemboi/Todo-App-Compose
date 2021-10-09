@@ -24,17 +24,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.lifecycleScope
-import com.mes.todo.data.DataBase
 import com.mes.todo.data.entities.Todo
 import com.mes.todo.ui.theme.ToDoTheme
 import com.mes.todo.utils.format
-import kotlinx.coroutines.flow.map
+import com.mes.todo.viewmodels.TodoViewModel
+import io.realm.Realm
 import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.util.*
 
 class MainActivity : ComponentActivity() {
-    val todoViewModel: TodoViewModel = TodoViewModel()
-    val database: DataBase = DataBase()
+    private val todoViewModel: TodoViewModel by viewModel()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -48,9 +48,7 @@ class MainActivity : ComponentActivity() {
                         )
                 ) {
                     val (addFab) = createRefs()
-                    val todosState by database.toDosFlow.map {
-                        it.toList()
-                    }.collectAsState(
+                    val todosState by todoViewModel.fetchTodos().collectAsState(
                         initial = listOf()
                     )
                     TodoItems(items = todosState, modifier = Modifier.fillMaxSize())
@@ -58,13 +56,7 @@ class MainActivity : ComponentActivity() {
                     FloatingActionButton(
                         onClick = {
                             lifecycleScope.launch {
-                                database.insertTodo(
-                                    Todo(
-                                        title = "ToDo ${database.todos.size + 1}",
-                                        dueDate = Date(),
-                                        isDone = false
-                                    )
-                                )
+                                todoViewModel.addToDoItem()
                             }
                         },
                         modifier = Modifier
