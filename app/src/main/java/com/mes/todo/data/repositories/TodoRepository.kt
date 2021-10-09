@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface TodoRepository : BaseRepository<Todo> {
     fun fetchAll(): Flow<PagingData<Todo>>
-    fun clearTodos()
+    suspend fun clearTodos()
 }
 
 class TodoRepositoryImpl(
@@ -31,11 +31,11 @@ class TodoRepositoryImpl(
             }
         ).flow
 
-    override fun clearTodos() = todoDao.clearTodos()
+    override suspend fun clearTodos() = todoDao.clearTodos()
 
-    override suspend fun save(item: Todo) = todoDao.insert(item = item)
+    override suspend fun save(item: Todo): Long = todoDao.insert(item = item)
 
-    override suspend fun save(items: List<Todo>) = todoDao.insert(items = items)
+    override suspend fun save(items: List<Todo>): List<Long> = todoDao.insert(items = items)
 
     override suspend fun update(item: Todo) = todoDao.update(item = item)
 

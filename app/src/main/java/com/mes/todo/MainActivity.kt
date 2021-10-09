@@ -34,7 +34,9 @@ import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.mes.todo.data.entities.Todo
 import com.mes.todo.ui.theme.ToDoTheme
 import com.mes.todo.utils.format
+import com.mes.todo.utils.safeLaunch
 import com.mes.todo.viewmodels.TodoViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -55,6 +57,7 @@ class MainActivity : ComponentActivity() {
                             MaterialTheme.colors.background
                         )
                 ) {
+                    val coroutineScope = rememberCoroutineScope()
                     val (addFab, taskTitle, todos) = createRefs()
                     Text(
                         text = "Tasks",
@@ -70,6 +73,8 @@ class MainActivity : ComponentActivity() {
                     TodoItems(
                         todoItems = todoViewModel.fetchTodos(),
                         onMarkToDoDone = todoViewModel::updateTodo,
+                        onDeleteTodo = todoViewModel::deleteTodo,
+                        coroutineScope = coroutineScope,
                         modifier = Modifier
                             .fillMaxSize()
                             .constrainAs(todos) {
@@ -86,18 +91,18 @@ class MainActivity : ComponentActivity() {
 
                     FloatingActionButton(
                         onClick = {
-                            lifecycleScope.launch {
+                            coroutineScope.safeLaunch {
                                 todoViewModel.addToDoItem()
                             }
                         },
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(14.dp),
                         backgroundColor = Color.Blue,
                         modifier = Modifier
                             .constrainAs(addFab) {
                                 bottom.linkTo(parent.bottom)
                                 end.linkTo(parent.end)
                             }
-                            .offset(x = (-26).dp, y = (-16).dp)
+                            .offset(x = (-16).dp, y = (-24).dp)
 
                     ) {
                         Icon(
@@ -117,6 +122,8 @@ class MainActivity : ComponentActivity() {
 fun TodoItems(
     todoItems: Flow<PagingData<Todo>>,
     onMarkToDoDone: suspend (todo: Todo) -> Unit,
+    onDeleteTodo: suspend (todo: Todo) -> Unit,
+    coroutineScope: CoroutineScope,
     modifier: Modifier = Modifier
 ) {
     val lazyItems = todoItems.collectAsLazyPagingItems()
@@ -146,6 +153,8 @@ fun TodoItems(
                         ),
                         todo = item,
                         onMarkToDoDone = onMarkToDoDone,
+                        onDeleteTodo = onDeleteTodo,
+                        coroutineScope = coroutineScope,
                         iconTint = if (item.isDone) {
                             Color.Green
                         } else {
@@ -163,6 +172,8 @@ fun TodoItem(
     painter: Painter,
     todo: Todo,
     onMarkToDoDone: suspend (todo: Todo) -> Unit,
+    onDeleteTodo: suspend (todo: Todo) -> Unit,
+    coroutineScope: CoroutineScope,
     modifier: Modifier = Modifier,
     iconTint: Color = Color.Green,
 ) {
@@ -177,14 +188,13 @@ fun TodoItem(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            val (icon, toDoDetailsColumn) = createRefs()
+            val (icon, toDoDetailsColumn, deleteBtn) = createRefs()
             val context = LocalContext.current
-            val coroutineScope = rememberCoroutineScope()
             Image(
                 modifier = Modifier
                     .clickable {
                         if (!todo.isDone) {
-                            coroutineScope.launch {
+                            coroutineScope.safeLaunch {
                                 Toast
                                     .makeText(
                                         context,
@@ -234,6 +244,34 @@ fun TodoItem(
                 Text(text = todo.title, fontSize = 20.sp)
                 Text(text = todo.dueDate.format(), fontSize = 14.sp)
             }
+
+            Image(
+                modifier = Modifier
+                    .clickable {
+                        coroutineScope.safeLaunch {
+                            Toast
+                                .makeText(
+                                    context,
+                                    "Deleted: ${todo.title}",
+                                    Toast.LENGTH_SHORT
+                                )
+                                .show()
+                            onDeleteTodo(todo)
+                        }
+                    }
+                    .height(48.dp)
+                    .width(48.dp)
+                    .padding(12.dp)
+                    .constrainAs(deleteBtn) {
+                        end.linkTo(parent.end)
+                        top.linkTo(parent.top)
+                        bottom.linkTo(parent.bottom)
+                    },
+                painter = painterResource(id = R.drawable.ic_delete),
+                contentDescription = "Delete",
+                contentScale = ContentScale.Crop,
+                colorFilter = ColorFilter.tint(Color.Red)
+            )
 
         }
     }

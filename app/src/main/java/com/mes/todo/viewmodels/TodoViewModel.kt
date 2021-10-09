@@ -24,6 +24,7 @@ class TodoViewModel(
     }
 
     suspend fun updateTodo(todo: Todo) = todoUseCase.updateTodo(todo = todo)
+    suspend fun deleteTodo(todo: Todo) = todoUseCase.deleteTodo(todo = todo)
 
-    private fun clearTodos() = todoUseCase.clearTodos()
+    private suspend fun clearTodos() = todoUseCase.clearTodos()
 }

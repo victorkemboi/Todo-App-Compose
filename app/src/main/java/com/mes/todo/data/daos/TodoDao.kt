@@ -12,5 +12,5 @@ interface TodoDao : BaseDao<Todo> {
     fun fetchAll(): PagingSource<Int, Todo>
 
     @Query("DELETE FROM Todo")
-    fun clearTodos()
+    suspend fun clearTodos()
 }

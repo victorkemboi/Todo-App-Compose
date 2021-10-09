@@ -13,5 +13,7 @@ class TodoUseCase(
 
     suspend fun updateTodo(todo: Todo) = todoRepository.update(todo)
 
-    fun clearTodos() = todoRepository.clearTodos()
+    suspend fun deleteTodo(todo: Todo) = todoRepository.delete(todo)
+
+    suspend fun clearTodos() = todoRepository.clearTodos()
 }
