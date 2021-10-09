@@ -1,5 +1,9 @@
 package com.mes.todo.data
 
+import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
+import com.mes.todo.data.converters.DateConverter
+import com.mes.todo.data.daos.TodoDao
 import com.mes.todo.data.entities.Todo
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
@@ -10,33 +14,18 @@ import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.collections.HashMap
 
-class DataBase() {
-    val todos: HashMap<String, Todo> = HashMap()
+@androidx.room.Database(
+    entities = [
+        Todo::class,
+    ],
+    version = 1,
+    exportSchema = false
+)
 
-    val toDosFlow: MutableStateFlow<Collection<Todo>> = MutableStateFlow(todos.values)
-
-
-    init {
-        MainScope().launch {
-            for (i in 0..10) {
-                insertTodo(
-                    Todo(
-                        title = "ToDo ${todos.size + 1}",
-                        dueDate = Date(),
-                        isDone = false
-                    )
-                )
-                delay(2000)
-            }
-        }
-    }
-
-    suspend fun insertTodo(todo: Todo) {
-        todos[todo.id] = todo
-        toDosFlow.emit(todos.values)
-    }
-
-    val observeTodos: StateFlow<Collection<Todo>>
-        get() = toDosFlow
+@TypeConverters(
+    DateConverter::class,
+)
+abstract class Database : RoomDatabase() {
+    abstract fun TodoDao(): TodoDao
 }
 
