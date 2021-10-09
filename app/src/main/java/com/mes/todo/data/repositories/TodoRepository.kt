@@ -1,22 +1,36 @@
 package com.mes.todo.data.repositories
 
+import androidx.paging.ExperimentalPagingApi
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
 import com.mes.todo.data.daos.TodoDao
 import com.mes.todo.data.entities.Todo
-import io.realm.RealmResults
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 
-interface TodoRepository: BaseRepository<Todo> {
-    fun fetchAll(): Flow<RealmResults<Todo>>
+interface TodoRepository : BaseRepository<Todo> {
+    fun fetchAll(): Flow<PagingData<Todo>>
     fun clearTodos()
 }
 
 class TodoRepositoryImpl(
     private val todoDao: TodoDao
-): TodoRepository {
+) : TodoRepository {
 
-    @ExperimentalCoroutinesApi
-    override fun fetchAll(): Flow<RealmResults<Todo>> = todoDao.fetchAll()
+    @ExperimentalPagingApi
+    override fun fetchAll(): Flow<PagingData<Todo>> =
+        Pager(
+            config = PagingConfig(
+                pageSize = 50,
+                enablePlaceholders = false,
+                prefetchDistance = 2
+            ),
+            remoteMediator = null,
+            pagingSourceFactory = {
+                todoDao.fetchAll()
+            }
+        ).flow
+
     override fun clearTodos() = todoDao.clearTodos()
 
     override suspend fun save(item: Todo) = todoDao.insert(item = item)

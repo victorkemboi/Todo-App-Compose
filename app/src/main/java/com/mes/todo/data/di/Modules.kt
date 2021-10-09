@@ -1,25 +1,27 @@
 package com.mes.todo.data.di
 
-import com.mes.todo.data.daos.TodoDao
+import androidx.room.Room
+import com.mes.todo.data.Database
 import com.mes.todo.data.repositories.TodoRepository
 import com.mes.todo.data.repositories.TodoRepositoryImpl
-import com.mes.todo.utils.DatabaseConstants.REALM_NAME
-import io.realm.Realm
-import io.realm.RealmConfiguration
+import com.mes.todo.utils.DatabaseConstants.DATABASE_NAME
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
 val databaseModule: Module = module {
 
     single {
-        val config = RealmConfiguration.Builder().name(REALM_NAME).build()
-        val backgroundThreadRealm: Realm = Realm.getInstance(config)
-        backgroundThreadRealm
+        Room.databaseBuilder(
+            androidContext(),
+            Database::class.java,
+            DATABASE_NAME
+        ).fallbackToDestructiveMigration().build()
     }
 }
 
 private val daoModule: Module = module {
-    single { TodoDao(get()) }
+    single { get<Database>().TodoDao() }
 }
 
 private val repositoryModule: Module = module {

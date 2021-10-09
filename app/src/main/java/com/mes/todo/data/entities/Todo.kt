@@ -1,12 +1,17 @@
 package com.mes.todo.data.entities
 
+import androidx.room.Entity
+import androidx.room.Index
+import androidx.room.PrimaryKey
 import com.mes.todo.utils.generateUuid
-import io.realm.RealmObject
 import java.util.*
 
-open class Todo(
-    var title: String = "",
-    var dueDate: Date = Date(),
+@Entity(indices = [Index(value = ["id"], unique = true)])
+data class Todo(
+    var title: String,
+    var dueDate: Date,
     var isDone: Boolean = false,
-    var id: String = generateUuid()
-) : RealmObject()
+    var createdAt: Date = Calendar.getInstance().time,
+    @PrimaryKey
+    var id: String = generateUuid(),
+)

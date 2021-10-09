@@ -1,37 +1,44 @@
 package com.mes.todo
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.lifecycleScope
+import androidx.paging.LoadState
+import androidx.paging.PagingData
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.items
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.mes.todo.data.entities.Todo
 import com.mes.todo.ui.theme.ToDoTheme
 import com.mes.todo.utils.format
 import com.mes.todo.viewmodels.TodoViewModel
-import io.realm.Realm
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import java.util.*
+import timber.log.Timber
 
 class MainActivity : ComponentActivity() {
     private val todoViewModel: TodoViewModel by viewModel()
@@ -39,6 +46,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ToDoTheme {
+                Timber.d("Theming.")
                 // A surface container using the 'background' color from the theme
                 ConstraintLayout(
                     modifier = Modifier
@@ -47,11 +55,34 @@ class MainActivity : ComponentActivity() {
                             MaterialTheme.colors.background
                         )
                 ) {
-                    val (addFab) = createRefs()
-                    val todosState by todoViewModel.fetchTodos().collectAsState(
-                        initial = listOf()
+                    val (addFab, taskTitle, todos) = createRefs()
+                    Text(
+                        text = "Tasks",
+                        fontSize = 24.sp,
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .constrainAs(taskTitle) {
+                                top.linkTo(parent.top)
+                                start.linkTo(parent.start)
+                            }
                     )
-                    TodoItems(items = todosState, modifier = Modifier.fillMaxSize())
+
+                    TodoItems(
+                        todoItems = todoViewModel.fetchTodos(),
+                        onMarkToDoDone = todoViewModel::updateTodo,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .constrainAs(todos) {
+                                top.linkTo(taskTitle.bottom)
+                                bottom.linkTo(parent.bottom)
+                            }
+                            .padding(
+                                top = 18.dp,
+                                bottom = 18.dp,
+                                start = 8.dp,
+                                end = 8.dp,
+                            )
+                    )
 
                     FloatingActionButton(
                         onClick = {
@@ -80,27 +111,45 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun TodoItems(
-    items: List<Todo>,
+    todoItems: Flow<PagingData<Todo>>,
+    onMarkToDoDone: suspend (todo: Todo) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    LazyColumn(
-        modifier = modifier.padding(16.dp)
+    val lazyItems = todoItems.collectAsLazyPagingItems()
+    SwipeRefresh(
+        state = rememberSwipeRefreshState(
+            lazyItems.loadState.append == LoadState.Loading
+        ),
+        onRefresh = { lazyItems.refresh() },
     ) {
-        items(items = items) { item ->
-            TodoItem(
-                painter = painterResource(
-                    id = if (
-                        item.isDone
-                    ) {
-                        R.drawable.ic_done
-                    } else {
-                        R.drawable.ic_pending_action
-                    }
-                ),
-                title = item.title,
-                dueDate = item.dueDate.format(),
-                contentDescription = item.title
-            )
+        LazyColumn(
+            modifier = modifier
+        ) {
+            items(lazyItems) { item ->
+                item ?: return@items
+                Box(
+                    modifier = Modifier.padding(8.dp)
+                ) {
+                    TodoItem(
+                        painter = painterResource(
+                            id = if (
+                                item.isDone
+                            ) {
+                                R.drawable.ic_done
+                            } else {
+                                R.drawable.ic_pending_action
+                            }
+                        ),
+                        todo = item,
+                        onMarkToDoDone = onMarkToDoDone,
+                        iconTint = if (item.isDone) {
+                            Color.Green
+                        } else {
+                            Color.Blue
+                        }
+                    )
+                }
+            }
         }
     }
 }
@@ -108,9 +157,8 @@ fun TodoItems(
 @Composable
 fun TodoItem(
     painter: Painter,
-    title: String,
-    dueDate: String,
-    contentDescription: String,
+    todo: Todo,
+    onMarkToDoDone: suspend (todo: Todo) -> Unit,
     modifier: Modifier = Modifier,
     iconTint: Color = Color.Green,
 ) {
@@ -119,13 +167,15 @@ fun TodoItem(
         shape = RoundedCornerShape(12.dp),
         elevation = 5.dp
     ) {
+        Timber.d("Todo item")
         ConstraintLayout(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
             val (icon, toDoDetailsColumn) = createRefs()
-
+            val context = LocalContext.current
+            val coroutineScope = rememberCoroutineScope()
             Image(
                 modifier = Modifier
                     .height(48.dp)
@@ -145,9 +195,23 @@ fun TodoItem(
                         start.linkTo(parent.start)
                         top.linkTo(parent.top)
                         bottom.linkTo(parent.bottom)
+                    }
+                    .clickable {
+                        coroutineScope.launch {
+                            Toast
+                                .makeText(
+                                    context,
+                                    "Done for: ${todo.title}",
+                                    Toast.LENGTH_SHORT
+                                )
+                                .show()
+                            onMarkToDoDone(todo.apply {
+                                isDone = true
+                            })
+                        }
                     },
                 painter = painter,
-                contentDescription = contentDescription,
+                contentDescription = todo.title,
                 contentScale = ContentScale.Crop,
                 colorFilter = ColorFilter.tint(Color.White)
             )
@@ -162,8 +226,8 @@ fun TodoItem(
                     .padding(start = 16.dp),
                 verticalArrangement = Arrangement.Center
             ) {
-                Text(text = title, fontSize = 20.sp)
-                Text(text = dueDate, fontSize = 14.sp)
+                Text(text = todo.title, fontSize = 20.sp)
+                Text(text = todo.dueDate.format(), fontSize = 14.sp)
             }
 
         }

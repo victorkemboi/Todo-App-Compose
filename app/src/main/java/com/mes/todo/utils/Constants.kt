@@ -5,5 +5,5 @@ object Constants {
 }
 
 object DatabaseConstants{
-    const val REALM_NAME = "Todos"
+    const val DATABASE_NAME = "Todos"
 }

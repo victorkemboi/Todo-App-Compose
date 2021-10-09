@@ -9,9 +9,9 @@ class TodoUseCase(
 ) {
     suspend fun saveTodo(item: Todo) = todoRepository.save(item)
 
-    fun fetchTodos() = todoRepository.fetchAll().map {
-        it.toList().sortedBy {todo -> todo.dueDate }
-    }
+    fun fetchTodos() = todoRepository.fetchAll()
+
+    suspend fun updateTodo(todo: Todo) = todoRepository.update(todo)
 
     fun clearTodos() = todoRepository.clearTodos()
 }
