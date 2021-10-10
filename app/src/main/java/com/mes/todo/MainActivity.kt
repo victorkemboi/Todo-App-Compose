@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -44,6 +45,7 @@ import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.mes.todo.data.entities.Todo
 import com.mes.todo.ui.theme.LightBlue
 import com.mes.todo.ui.theme.LightGreen
+import com.mes.todo.ui.theme.MutedPurple
 import com.mes.todo.ui.theme.ToDoTheme
 import com.mes.todo.utils.TodoStateConstants.DONE
 import com.mes.todo.utils.TodoStateConstants.PENDING
@@ -61,7 +63,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ToDoTheme {
-                Timber.d("Theming.")
                 // A surface container using the 'background' color from the theme
                 ConstraintLayout(
                     modifier = Modifier
@@ -117,7 +118,7 @@ class MainActivity : ComponentActivity() {
                             }
                         },
                         shape = RoundedCornerShape(14.dp),
-                        backgroundColor = Color.Blue,
+                        backgroundColor = MutedPurple,
                         modifier = Modifier
                             .constrainAs(addFab) {
                                 bottom.linkTo(parent.bottom)
@@ -129,7 +130,7 @@ class MainActivity : ComponentActivity() {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_add),
                             contentDescription = "Add icon",
-                            tint = Color.Green
+                            tint = Color.White
                         )
                     }
                 }
@@ -213,6 +214,9 @@ fun TodoItem(
             val context = LocalContext.current
             Image(
                 modifier = Modifier
+                    .height(48.dp)
+                    .width(48.dp)
+                    .clip(CircleShape)
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(
@@ -222,8 +226,6 @@ fun TodoItem(
                         ),
                         CircleShape
                     )
-                    .height(48.dp)
-                    .width(48.dp)
                     .clickable {
                         if (!todo.isDone) {
                             coroutineScope.safeLaunch {
@@ -268,6 +270,7 @@ fun TodoItem(
 
             Image(
                 modifier = Modifier
+                    .clip(CircleShape)
                     .clickable {
                         coroutineScope.safeLaunch {
                             Toast
@@ -320,26 +323,18 @@ fun radioGroup(
             Column(
                 Modifier
                     .background(
-                        brush = Brush.horizontalGradient(
+                        brush = Brush.verticalGradient(
                             colors = listOf(
-                                Color.DarkGray,
-                                when (selectedOption) {
-                                    PENDING -> LightBlue
-                                    DONE -> LightGreen
-                                    else -> Color(0xFFFEFEFA)
-                                }
+                                MutedPurple,
+                                Color.DarkGray
                             )
-                        ),
-                        RoundedCornerShape(12.dp)
+                        )
                     )
                     .padding(10.dp)
             ) {
                 Text(
-                    color = when (selectedOption) {
-                        PENDING -> LightBlue
-                        DONE -> LightGreen
-                        else -> Color(0xFFFEFEFA)
-                    },
+                    color = Color.White,
+                    fontSize = 16.sp,
                     text = title,
                     fontStyle = FontStyle.Normal,
                     fontWeight = FontWeight.Bold,
@@ -362,7 +357,8 @@ fun radioGroup(
                                     selectedColor = when (selectedOption) {
                                         PENDING -> LightBlue
                                         else -> LightGreen
-                                    }
+                                    },
+                                    unselectedColor = Color.White
                                 )
                             )
 
@@ -374,7 +370,11 @@ fun radioGroup(
 
                             ClickableText(
                                 style = TextStyle(
-                                    color = Color.White,
+                                    color = when {
+                                        selectedOption == PENDING && item == PENDING -> LightBlue
+                                        selectedOption == DONE && item == DONE -> LightGreen
+                                        else -> Color.White
+                                    },
                                 ),
                                 text = annotatedString,
                                 onClick = {
