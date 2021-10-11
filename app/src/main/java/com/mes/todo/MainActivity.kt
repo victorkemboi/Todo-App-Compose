@@ -43,10 +43,7 @@ import androidx.paging.compose.items
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.mes.todo.data.entities.Todo
-import com.mes.todo.ui.theme.LightBlue
-import com.mes.todo.ui.theme.LightGreen
-import com.mes.todo.ui.theme.MutedPurple
-import com.mes.todo.ui.theme.ToDoTheme
+import com.mes.todo.ui.theme.*
 import com.mes.todo.utils.TodoStateConstants.DONE
 import com.mes.todo.utils.TodoStateConstants.PENDING
 import com.mes.todo.utils.format
@@ -323,11 +320,8 @@ fun radioGroup(
             Column(
                 Modifier
                     .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                MutedPurple,
-                                Color.DarkGray
-                            )
+                        brush = Brush.horizontalGradient(
+                            colors = OrangeGradient()
                         )
                     )
                     .padding(10.dp)
