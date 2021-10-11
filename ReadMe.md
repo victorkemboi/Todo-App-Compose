@@ -3,16 +3,16 @@ A simple task manager for users to add tasks to be done and mark to `DONE` when 
 
 ## Jetpack Compose
 This project aims to teach on using the new Jetpack Compose UI Kit. The following are used in the project:
-    * ConstrainLayout
-    * Row
-    * Column
-    * LazyColumn
-    * Floating Action Button
-    * SwipeRefresh
-    * Box
-    * Card
-    * Image
-    * RadioGroup and Radio Button
+   * ConstrainLayout
+   * Row
+   * Column
+   * LazyColumn
+   * Floating Action Button
+   * SwipeRefresh
+   * Box
+   * Card
+   * Image
+   * RadioGroup and Radio Button
 
 
 ## Tech-stack
