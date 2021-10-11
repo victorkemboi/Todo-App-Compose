@@ -27,3 +27,14 @@ fun OrangeGradient(inverse: Boolean = false) = when (inverse) {
         LightOrange
     )
 }
+
+fun BluePinkGradient(inverse: Boolean = false) = when (inverse) {
+    true -> listOf(
+        MutedBlue,
+        MutedPink
+    )
+    false -> listOf(
+        MutedPink,
+        MutedBlue
+    )
+}

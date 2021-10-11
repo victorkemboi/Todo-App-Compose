@@ -1,5 +1,6 @@
 package com.mes.todo.viewmodels.di
 
+import com.mes.todo.viewmodels.AddTodoViewModel
 import com.mes.todo.viewmodels.TodoViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -11,6 +12,7 @@ import org.koin.dsl.module
 
 private val viewModelModule: Module = module {
     viewModel { TodoViewModel(get()) }
+    viewModel { AddTodoViewModel(get()) }
 }
 
 private val utilModule: Module = module {
