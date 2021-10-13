@@ -45,6 +45,7 @@ import com.mes.todo.data.entities.Todo
 import com.mes.todo.ui.theme.*
 import com.mes.todo.utils.TodoStateConstants
 import com.mes.todo.utils.format
+import com.mes.todo.utils.isEmpty
 import com.mes.todo.utils.safeLaunch
 import com.mes.todo.viewmodels.TodoViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -114,7 +115,7 @@ fun TodosPage(
                 }
             },
             shape = RoundedCornerShape(14.dp),
-            backgroundColor = MutedPurple,
+            backgroundColor = MutedPink,
             modifier = Modifier
                 .constrainAs(addFab) {
                     bottom.linkTo(parent.bottom)
@@ -149,33 +150,59 @@ fun TodoItems(
         onRefresh = { lazyItems.refresh() },
         modifier = modifier
     ) {
-        LazyColumn(
-        ) {
-            items(lazyItems) { item ->
-                item ?: return@items
-                Box(
-                    modifier = Modifier.padding(8.dp)
-                ) {
-                    TodoItem(
-                        painter = painterResource(
-                            id = if (
-                                item.isDone
-                            ) {
-                                R.drawable.ic_done
+        if (lazyItems.isEmpty()) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Image(
+                    modifier = Modifier
+                        .height(80.dp)
+                        .width(80.dp),
+                    painter = painterResource(id = R.drawable.ic_list_bulleted),
+                    contentDescription = "Empty list icon",
+                    contentScale = ContentScale.Crop,
+                    colorFilter = ColorFilter.tint(Color.Gray)
+                )
+                Text(
+                    color = Color.Gray,
+                    fontSize = 12.sp,
+                    text = "On a clean slate. Add task now!",
+                    fontStyle = FontStyle.Normal,
+                    fontWeight = FontWeight.Normal,
+                    modifier = Modifier.padding(5.dp),
+                )
+            }
+        } else {
+            LazyColumn(
+            ) {
+                items(lazyItems) { item ->
+                    item ?: return@items
+                    Box(
+                        modifier = Modifier.padding(8.dp)
+                    ) {
+                        TodoItem(
+                            painter = painterResource(
+                                id = if (
+                                    item.isDone
+                                ) {
+                                    R.drawable.ic_done
+                                } else {
+                                    R.drawable.ic_pending_action
+                                }
+                            ),
+                            todo = item,
+                            onMarkToDoDone = onMarkToDoDone,
+                            onDeleteTodo = onDeleteTodo,
+                            coroutineScope = coroutineScope,
+                            iconTint = if (item.isDone) {
+                                LightGreen
                             } else {
-                                R.drawable.ic_pending_action
+                                LightBlue
                             }
-                        ),
-                        todo = item,
-                        onMarkToDoDone = onMarkToDoDone,
-                        onDeleteTodo = onDeleteTodo,
-                        coroutineScope = coroutineScope,
-                        iconTint = if (item.isDone) {
-                            LightGreen
-                        } else {
-                            LightBlue
-                        }
-                    )
+                        )
+                    }
                 }
             }
         }
