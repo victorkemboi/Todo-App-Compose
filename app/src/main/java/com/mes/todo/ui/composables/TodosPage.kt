@@ -106,29 +106,37 @@ fun TodosPage(
             )
         }
 
-        FloatingActionButton(
-            onClick = {
-                coroutineScope.safeLaunch {
-                    navController.navigate("AddTodoPage") {
-                        launchSingleTop = true
-                    }
-                }
-            },
-            shape = RoundedCornerShape(14.dp),
-            backgroundColor = MutedPink,
+        Card(
             modifier = Modifier
                 .constrainAs(addFab) {
                     bottom.linkTo(parent.bottom)
                     end.linkTo(parent.end)
                 }
-                .offset(x = (-16).dp, y = (-24).dp)
-
+                .offset(x = (-16).dp, y = (-24).dp),
+            elevation = 4.dp,
+            shape = RoundedCornerShape(14.dp)
         ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_add),
-                contentDescription = "Add icon",
-                tint = Color.White
-            )
+            IconButton(
+                onClick = {
+                    coroutineScope.safeLaunch {
+                        navController.navigate("AddTodoPage") {
+                            launchSingleTop = true
+                        }
+                    }
+                },
+                modifier = Modifier
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = BluePinkGradient()
+                        ),
+                    )
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_add),
+                    contentDescription = "Add icon",
+                    tint = Color.White
+                )
+            }
         }
     }
 }
@@ -222,7 +230,7 @@ fun TodoItem(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        elevation = 5.dp
+        elevation = 4.dp
     ) {
         ConstraintLayout(
             modifier = Modifier
